@@ -1,5 +1,3 @@
-// +build !confonly
-
 package command
 
 import (
@@ -140,6 +138,11 @@ func (s *service) Register(server *grpc.Server) {
 		hs.ohm = om
 	}))
 	RegisterHandlerServiceServer(server, hs)
+
+	// For compatibility purposes
+	vCoreDesc := HandlerService_ServiceDesc
+	vCoreDesc.ServiceName = "v2ray.core.app.proxyman.command.HandlerService"
+	server.RegisterService(&vCoreDesc, hs)
 }
 
 func init() {

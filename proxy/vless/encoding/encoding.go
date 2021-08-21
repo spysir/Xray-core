@@ -1,5 +1,3 @@
-// +build !confonly
-
 package encoding
 
 //go:generate go run github.com/xtls/xray-core/common/errors/errorgen
@@ -8,8 +6,8 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"runtime"
 	"syscall"
-	"time"
 
 	"github.com/xtls/xray-core/common/buf"
 	"github.com/xtls/xray-core/common/errors"
@@ -191,11 +189,14 @@ func ReadV(reader buf.Reader, writer buf.Writer, timer signal.ActivityUpdater, c
 						if ok {
 							iConn = statConn.Connection
 						}
+						if xc, ok := iConn.(*xtls.Conn); ok {
+							iConn = xc.Connection
+						}
 						if tc, ok := iConn.(*net.TCPConn); ok {
 							if conn.SHOW {
 								fmt.Println(conn.MARK, "Splice")
 							}
-							time.Sleep(time.Millisecond) // necessary
+							runtime.Gosched() // necessary
 							w, err := tc.ReadFrom(conn.Connection)
 							if counter != nil {
 								counter.Add(w)

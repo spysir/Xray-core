@@ -1,5 +1,3 @@
-// +build !confonly
-
 package command
 
 //go:generate go run github.com/xtls/xray-core/common/errors/errorgen
@@ -40,9 +38,15 @@ type service struct {
 }
 
 func (s *service) Register(server *grpc.Server) {
-	RegisterLoggerServiceServer(server, &LoggerServer{
+	ls := &LoggerServer{
 		V: s.v,
-	})
+	}
+	RegisterLoggerServiceServer(server, ls)
+
+	// For compatibility purposes
+	vCoreDesc := LoggerService_ServiceDesc
+	vCoreDesc.ServiceName = "v2ray.core.app.log.command.LoggerService"
+	server.RegisterService(&vCoreDesc, ls)
 }
 
 func init() {

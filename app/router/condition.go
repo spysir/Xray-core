@@ -1,5 +1,3 @@
-// +build !confonly
-
 package router
 
 import (
@@ -68,6 +66,24 @@ type DomainMatcher struct {
 	matchers strmatcher.IndexMatcher
 }
 
+func NewMphMatcherGroup(domains []*Domain) (*DomainMatcher, error) {
+	g := strmatcher.NewMphMatcherGroup()
+	for _, d := range domains {
+		matcherType, f := matcherTypeMap[d.Type]
+		if !f {
+			return nil, newError("unsupported domain type", d.Type)
+		}
+		_, err := g.AddPattern(d.Value, matcherType)
+		if err != nil {
+			return nil, err
+		}
+	}
+	g.Build()
+	return &DomainMatcher{
+		matchers: g,
+	}, nil
+}
+
 func NewDomainMatcher(domains []*Domain) (*DomainMatcher, error) {
 	g := new(strmatcher.MatcherGroup)
 	for _, d := range domains {
@@ -84,7 +100,7 @@ func NewDomainMatcher(domains []*Domain) (*DomainMatcher, error) {
 }
 
 func (m *DomainMatcher) ApplyDomain(domain string) bool {
-	return len(m.matchers.Match(domain)) > 0
+	return len(m.matchers.Match(strings.ToLower(domain))) > 0
 }
 
 // Apply implements Condition.

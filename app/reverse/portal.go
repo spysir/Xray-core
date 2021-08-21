@@ -1,5 +1,3 @@
-// +build !confonly
-
 package reverse
 
 import (
@@ -157,6 +155,9 @@ func (p *StaticMuxPicker) PickAvailable() (*mux.ClientWorker, error) {
 	var minConn uint32 = 9999
 	for i, w := range p.workers {
 		if w.draining {
+			continue
+		}
+		if w.client.Closed() {
 			continue
 		}
 		if w.client.ActiveConnections() < minConn {

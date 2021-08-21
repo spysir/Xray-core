@@ -1,5 +1,3 @@
-// +build !confonly
-
 package quic
 
 import (
@@ -105,8 +103,7 @@ func Listen(ctx context.Context, address net.Address, port net.Port, streamSetti
 
 	quicConfig := &quic.Config{
 		ConnectionIDLength:    12,
-		HandshakeTimeout:      time.Second * 8,
-		MaxIdleTimeout:        time.Second * 45,
+		KeepAlive:             true,
 		MaxIncomingStreams:    32,
 		MaxIncomingUniStreams: -1,
 	}
