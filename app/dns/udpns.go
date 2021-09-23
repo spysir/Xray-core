@@ -2,11 +2,12 @@ package dns
 
 import (
 	"context"
-	"github.com/xtls/xray-core/transport/internet"
 	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"golang.org/x/net/dns/dnsmessage"
 
 	"github.com/xtls/xray-core/common"
 	"github.com/xtls/xray-core/common/log"
@@ -19,7 +20,6 @@ import (
 	dns_feature "github.com/xtls/xray-core/features/dns"
 	"github.com/xtls/xray-core/features/routing"
 	"github.com/xtls/xray-core/transport/internet/udp"
-	"golang.org/x/net/dns/dnsmessage"
 )
 
 type ClassicNameServer struct {
@@ -192,7 +192,7 @@ func (s *ClassicNameServer) sendQuery(ctx context.Context, domain string, option
 		if inbound := session.InboundFromContext(ctx); inbound != nil {
 			udpCtx = session.ContextWithInbound(udpCtx, inbound)
 		}
-		udpCtx = internet.ContextWithLookupDomain(udpCtx, internet.LookupDomainFromContext(ctx))
+
 		udpCtx = session.ContextWithContent(udpCtx, &session.Content{
 			Protocol: "dns",
 		})
