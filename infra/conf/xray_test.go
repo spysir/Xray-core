@@ -7,7 +7,6 @@ import (
 
 	"github.com/golang/protobuf/proto"
 	"github.com/google/go-cmp/cmp"
-
 	"github.com/xtls/xray-core/app/dispatcher"
 	"github.com/xtls/xray-core/app/log"
 	"github.com/xtls/xray-core/app/proxyman"
@@ -72,7 +71,6 @@ func TestXrayConfig(t *testing.T) {
 					"settings": {
 						"clients": [
 							{
-								"alterId": 100,
 								"security": "aes-128-gcm",
 								"id": "0cdf8a45-303d-4fed-9780-29aa7f54175e"
 							}
@@ -102,7 +100,6 @@ func TestXrayConfig(t *testing.T) {
 					"settings": {
 						"clients": [
 							{
-								"alterId": 100,
 								"security": "aes-128-gcm",
 								"id": "0cdf8a45-303d-4fed-9780-29aa7f54175e"
 							}
@@ -231,10 +228,7 @@ func TestXrayConfig(t *testing.T) {
 				Inbound: []*core.InboundHandlerConfig{
 					{
 						ReceiverSettings: serial.ToTypedMessage(&proxyman.ReceiverConfig{
-							PortRange: &net.PortRange{
-								From: 443,
-								To:   443,
-							},
+							PortList: &net.PortList{Range: []*net.PortRange{net.SinglePortRange(443)}},
 							StreamSettings: &internet.StreamConfig{
 								ProtocolName: "websocket",
 								TransportSettings: []*internet.TransportConfig{
@@ -269,8 +263,7 @@ func TestXrayConfig(t *testing.T) {
 								{
 									Level: 0,
 									Account: serial.ToTypedMessage(&vmess.Account{
-										Id:      "0cdf8a45-303d-4fed-9780-29aa7f54175e",
-										AlterId: 100,
+										Id: "0cdf8a45-303d-4fed-9780-29aa7f54175e",
 										SecuritySettings: &protocol.SecurityConfig{
 											Type: protocol.SecurityType_AES128_GCM,
 										},
@@ -281,10 +274,10 @@ func TestXrayConfig(t *testing.T) {
 					},
 					{
 						ReceiverSettings: serial.ToTypedMessage(&proxyman.ReceiverConfig{
-							PortRange: &net.PortRange{
+							PortList: &net.PortList{Range: []*net.PortRange{{
 								From: 443,
 								To:   500,
-							},
+							}}},
 							AllocationStrategy: &proxyman.AllocationStrategy{
 								Type: proxyman.AllocationStrategy_Random,
 								Concurrency: &proxyman.AllocationStrategy_AllocationStrategyConcurrency{
@@ -325,8 +318,7 @@ func TestXrayConfig(t *testing.T) {
 								{
 									Level: 0,
 									Account: serial.ToTypedMessage(&vmess.Account{
-										Id:      "0cdf8a45-303d-4fed-9780-29aa7f54175e",
-										AlterId: 100,
+										Id: "0cdf8a45-303d-4fed-9780-29aa7f54175e",
 										SecuritySettings: &protocol.SecurityConfig{
 											Type: protocol.SecurityType_AES128_GCM,
 										},

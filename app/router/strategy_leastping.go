@@ -2,10 +2,10 @@ package router
 
 import (
 	"context"
-	"github.com/xtls/xray-core/core"
 
 	"github.com/xtls/xray-core/app/observatory"
 	"github.com/xtls/xray-core/common"
+	"github.com/xtls/xray-core/core"
 	"github.com/xtls/xray-core/features/extension"
 )
 
@@ -15,14 +15,17 @@ type LeastPingStrategy struct {
 }
 
 func (l *LeastPingStrategy) InjectContext(ctx context.Context) {
-	common.Must(core.RequireFeatures(ctx, func(observatory extension.Observatory) error {
-		l.observatory = observatory
-		return nil
-	}))
 	l.ctx = ctx
 }
 
 func (l *LeastPingStrategy) PickOutbound(strings []string) string {
+	if l.observatory == nil {
+		common.Must(core.RequireFeatures(l.ctx, func(observatory extension.Observatory) error {
+			l.observatory = observatory
+			return nil
+		}))
+	}
+
 	observeReport, err := l.observatory.GetObservation(l.ctx)
 	if err != nil {
 		newError("cannot get observe report").Base(err).WriteToLog()
@@ -36,12 +39,13 @@ func (l *LeastPingStrategy) PickOutbound(strings []string) string {
 		for _, v := range status {
 			if outboundsList.contains(v.OutboundTag) && v.Alive && v.Delay < leastPing {
 				selectedOutboundName = v.OutboundTag
+				leastPing = v.Delay
 			}
 		}
 		return selectedOutboundName
 	}
 
-	//No way to understand observeReport
+	// No way to understand observeReport
 	return ""
 }
 

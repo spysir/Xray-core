@@ -7,7 +7,6 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/miekg/dns"
-
 	"github.com/xtls/xray-core/app/dispatcher"
 	dnsapp "github.com/xtls/xray-core/app/dns"
 	"github.com/xtls/xray-core/app/policy"
@@ -117,8 +116,8 @@ func TestUDPDNSTunnel(t *testing.T) {
 					Networks: []net.Network{net.Network_UDP},
 				}),
 				ReceiverSettings: serial.ToTypedMessage(&proxyman.ReceiverConfig{
-					PortRange: net.SinglePortRange(serverPort),
-					Listen:    net.NewIPOrDomain(net.LocalHostIP),
+					PortList: &net.PortList{Range: []*net.PortRange{net.SinglePortRange(serverPort)}},
+					Listen:   net.NewIPOrDomain(net.LocalHostIP),
 				}),
 			},
 		},
@@ -236,8 +235,8 @@ func TestTCPDNSTunnel(t *testing.T) {
 					Networks: []net.Network{net.Network_TCP},
 				}),
 				ReceiverSettings: serial.ToTypedMessage(&proxyman.ReceiverConfig{
-					PortRange: net.SinglePortRange(serverPort),
-					Listen:    net.NewIPOrDomain(net.LocalHostIP),
+					PortList: &net.PortList{Range: []*net.PortRange{net.SinglePortRange(serverPort)}},
+					Listen:   net.NewIPOrDomain(net.LocalHostIP),
 				}),
 			},
 		},
@@ -322,8 +321,8 @@ func TestUDP2TCPDNSTunnel(t *testing.T) {
 					Networks: []net.Network{net.Network_TCP},
 				}),
 				ReceiverSettings: serial.ToTypedMessage(&proxyman.ReceiverConfig{
-					PortRange: net.SinglePortRange(serverPort),
-					Listen:    net.NewIPOrDomain(net.LocalHostIP),
+					PortList: &net.PortList{Range: []*net.PortRange{net.SinglePortRange(serverPort)}},
+					Listen:   net.NewIPOrDomain(net.LocalHostIP),
 				}),
 			},
 		},

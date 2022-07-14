@@ -2,8 +2,8 @@ package conf
 
 import (
 	"encoding/json"
-	"github.com/golang/protobuf/proto"
 
+	"github.com/golang/protobuf/proto"
 	"github.com/xtls/xray-core/common/serial"
 	"github.com/xtls/xray-core/proxy/blackhole"
 )

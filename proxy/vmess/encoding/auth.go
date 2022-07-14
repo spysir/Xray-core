@@ -6,9 +6,7 @@ import (
 	"hash/fnv"
 
 	"github.com/xtls/xray-core/common"
-
 	"github.com/xtls/xray-core/common/crypto"
-
 	"golang.org/x/crypto/sha3"
 )
 

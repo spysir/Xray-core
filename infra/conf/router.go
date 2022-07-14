@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	"github.com/golang/protobuf/proto"
-
 	"github.com/xtls/xray-core/app/router"
 	"github.com/xtls/xray-core/common/net"
 	"github.com/xtls/xray-core/common/platform/filesystem"
@@ -18,9 +17,16 @@ type RouterRulesConfig struct {
 	DomainStrategy string            `json:"domainStrategy"`
 }
 
+// StrategyConfig represents a strategy config
+type StrategyConfig struct {
+	Type     string           `json:"type"`
+	Settings *json.RawMessage `json:"settings"`
+}
+
 type BalancingRule struct {
-	Tag       string     `json:"tag"`
-	Selectors StringList `json:"selector"`
+	Tag       string         `json:"tag"`
+	Selectors StringList     `json:"selector"`
+	Strategy  StrategyConfig `json:"strategy"`
 }
 
 func (r *BalancingRule) Build() (*router.BalancingRule, error) {
@@ -31,9 +37,20 @@ func (r *BalancingRule) Build() (*router.BalancingRule, error) {
 		return nil, newError("empty selector list")
 	}
 
+	var strategy string
+	switch strings.ToLower(r.Strategy.Type) {
+	case strategyRandom, "":
+		strategy = strategyRandom
+	case strategyLeastPing:
+		strategy = "leastPing"
+	default:
+		return nil, newError("unknown balancing strategy: " + r.Strategy.Type)
+	}
+
 	return &router.BalancingRule{
 		Tag:              r.Tag,
 		OutboundSelector: []string(r.Selectors),
+		Strategy:         strategy,
 	}, nil
 }
 

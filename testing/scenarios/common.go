@@ -11,10 +11,10 @@ import (
 	"runtime"
 	"sync"
 	"syscall"
+	"testing"
 	"time"
 
 	"github.com/golang/protobuf/proto"
-
 	"github.com/xtls/xray-core/app/dispatcher"
 	"github.com/xtls/xray-core/app/proxyman"
 	"github.com/xtls/xray-core/common"
@@ -23,6 +23,7 @@ import (
 	"github.com/xtls/xray-core/common/net"
 	"github.com/xtls/xray-core/common/retry"
 	"github.com/xtls/xray-core/common/serial"
+	"github.com/xtls/xray-core/common/units"
 	core "github.com/xtls/xray-core/core"
 )
 
@@ -198,7 +199,18 @@ func testUDPConn(port net.Port, payloadSize int, timeout time.Duration) func() e
 }
 
 func testTCPConn2(conn net.Conn, payloadSize int, timeout time.Duration) func() error {
-	return func() error {
+	return func() (err1 error) {
+		start := time.Now()
+		defer func() {
+			var m runtime.MemStats
+			runtime.ReadMemStats(&m)
+			// For info on each, see: https://golang.org/pkg/runtime/#MemStats
+			fmt.Println("testConn finishes:", time.Since(start).Milliseconds(), "ms\t",
+				err1, "\tAlloc =", units.ByteSize(m.Alloc).String(),
+				"\tTotalAlloc =", units.ByteSize(m.TotalAlloc).String(),
+				"\tSys =", units.ByteSize(m.Sys).String(),
+				"\tNumGC =", m.NumGC)
+		}()
 		payload := make([]byte, payloadSize)
 		common.Must2(rand.Read(payload))
 
@@ -222,4 +234,21 @@ func testTCPConn2(conn net.Conn, payloadSize int, timeout time.Duration) func() 
 
 		return nil
 	}
+}
+
+func WaitConnAvailableWithTest(t *testing.T, testFunc func() error) bool {
+	for i := 1; ; i++ {
+		if i > 10 {
+			t.Log("All attempts failed to test tcp conn")
+			return false
+		}
+		time.Sleep(time.Millisecond * 10)
+		if err := testFunc(); err != nil {
+			t.Log("err ", err)
+		} else {
+			t.Log("success with", i, "attempts")
+			break
+		}
+	}
+	return true
 }

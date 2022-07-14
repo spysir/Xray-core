@@ -9,8 +9,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/xtls/xray-core/transport/internet/stat"
-
 	"github.com/xtls/xray-core/common"
 	"github.com/xtls/xray-core/common/buf"
 	"github.com/xtls/xray-core/common/errors"
@@ -28,6 +26,7 @@ import (
 	"github.com/xtls/xray-core/features/routing"
 	"github.com/xtls/xray-core/proxy/vmess"
 	"github.com/xtls/xray-core/proxy/vmess/encoding"
+	"github.com/xtls/xray-core/transport/internet/stat"
 )
 
 var (
@@ -185,8 +184,10 @@ func (h *Handler) RemoveUser(ctx context.Context, email string) error {
 func transferResponse(timer signal.ActivityUpdater, session *encoding.ServerSession, request *protocol.RequestHeader, response *protocol.ResponseHeader, input buf.Reader, output *buf.BufferedWriter) error {
 	session.EncodeResponseHeader(response, output)
 
-	bodyWriter := session.EncodeResponseBody(request, output)
-
+	bodyWriter, err := session.EncodeResponseBody(request, output)
+	if err != nil {
+		return newError("failed to start decoding response").Base(err)
+	}
 	{
 		// Optimize for small response packet
 		data, err := input.ReadMultiBuffer()
@@ -302,7 +303,10 @@ func (h *Handler) Process(ctx context.Context, network net.Network, connection s
 	requestDone := func() error {
 		defer timer.SetTimeout(sessionPolicy.Timeouts.DownlinkOnly)
 
-		bodyReader := svrSession.DecodeRequestBody(request, reader)
+		bodyReader, err := svrSession.DecodeRequestBody(request, reader)
+		if err != nil {
+			return newError("failed to start decoding").Base(err)
+		}
 		if err := buf.Copy(bodyReader, link.Writer, buf.UpdateActivity(timer)); err != nil {
 			return newError("failed to transfer request").Base(err)
 		}
